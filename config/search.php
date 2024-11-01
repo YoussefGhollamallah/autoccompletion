@@ -1,20 +1,19 @@
 <?php
-
-use function PHPSTORM_META\type;
-
 require_once "dbconnexion.php";
 
-header("Content-Type: application/json");
+header("Content-Type: text/plain");
 
 $search = $_GET['search'] ?? '';
 
 try {
     $conn = (new Connexion())->connect();
-    $stmt = $conn->prepare("SELECT * FROM pokemon WHERE nom LIKE :search");
-    $stmt->execute(['search' => "%$search%"]);
-    $pokemons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($pokemons);
+    $stmt = $conn->prepare("SELECT nom FROM pokemon WHERE nom LIKE :search");
+    $stmt->execute(['search' => "%" . $search . "%"]);
+    $pokemons = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    // Renvoie chaque nom de Pokémon sur une nouvelle ligne
+    echo implode("\n", $pokemons);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo "Erreur : " . $e->getMessage();
 }
