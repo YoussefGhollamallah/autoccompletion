@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) throw new Error("Erreur dans la réponse du serveur");
                 
                 const textData = await response.text();
-                const data = textData.split('\n').filter(item => item.trim() !== '');
+                const [pokemonData, previousSearchesData] = textData.split('---PREVIOUS_SEARCHES---');
+                const data = pokemonData.split('\n').filter(item => item.trim() !== '');
+                const previousSearchesList = previousSearchesData.split('\n').filter(item => item.trim() !== '');
 
                 results.innerHTML = "";
                 results.style.display = "block";
@@ -46,25 +48,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Afficher les résultats actuels
                 if (data.length > 0) {
                     data.forEach(item => {
+                        const [id, name] = item.split('|');
                         const li = document.createElement("li");
-                        li.textContent = item;
+                        const a = document.createElement("a");
+                        a.href = `detail.php?id=${id}`;
+                        a.textContent = name;
+                        li.appendChild(a);
                         results.appendChild(li);
                     });
                 } else {
                     results.innerHTML = "<li>Aucun pokémon trouvé</li>";
-                    return;
                 }
 
                 // Ajouter les résultats précédents après un séparateur uniquement si l'utilisateur a sélectionné un élément
-                const previousSearches = loadPreviousSearches();
-                if (previousSearches.length > 0) {
+                if (previousSearchesList.length > 0) {
                     results.innerHTML += "<li class='separator'>Anciennes recherches :</li>"; // Séparateur
-                    previousSearches.forEach(item => {
+                    previousSearchesList.forEach(item => {
+                        const [id, name] = item.split('|');
                         const li = document.createElement("li");
-                        li.textContent = item;
+                        const a = document.createElement("a");
+                        a.href = `detail.php?id=${id}`;
+                        a.textContent = name;
+                        li.appendChild(a);
                         results.appendChild(li);
                     });
                 }
+
             } catch (error) {
                 results.innerHTML = "";
                 results.style.display = "none";
@@ -83,16 +92,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Événement de clic sur les résultats
+    // Enregistrer les recherches cliquées dans le localStorage
     results.addEventListener("click", (e) => {
-        if (e.target.tagName === "LI") {
-            const selectedItem = e.target.innerText;
-            searchInput.value = selectedItem;
-            results.innerHTML = "";
-            results.style.display = "none";
+        if (e.target.tagName === "A") {
+            const search = e.target.textContent;
+            savePreviousSearch(search);
 
-            // Ajouter la recherche actuelle aux recherches précédentes
-            savePreviousSearch(selectedItem);
+            // Enregistrer la recherche dans la session
+            fetch(`config/save_search.php?search=${encodeURIComponent(search)}`);
         }
     });
 
@@ -103,15 +110,4 @@ document.addEventListener('DOMContentLoaded', function() {
             results.style.display = "none";
         }
     });
-    
-    // Charger les recherches précédentes au chargement de la page
-    const previousSearches = loadPreviousSearches();
-    if (previousSearches.length > 0) {
-        results.innerHTML += "<li class='separator'>Anciennes recherches :</li>";
-        previousSearches.forEach(item => {
-            const li = document.createElement("li");
-            li.textContent = item;
-            results.appendChild(li);
-        });
-    }
 });
