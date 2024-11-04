@@ -32,7 +32,7 @@ if ($id) {
             <?php if ($pokemon["type_secondaire"]) : ?>
                 <p>Type Secondaire : <?php echo htmlspecialchars($pokemon["type_secondaire"]); ?></p>
             <?php endif; ?>
-            <a href="index.php">Acceuil</a>
+            <a href="index.php">Accueil</a>
         </article>
     </main>
     
